@@ -5,6 +5,8 @@ import numpy as np
 import torch
 from itertools import chain
 from utils.utils import pad 
+import os
+
 def zero_pad(sequences):
     """
 
@@ -28,10 +30,14 @@ class SpiderDataset(Dataset):
             data_path (string): file path of the data json file with questions
             tables_path (string): file path of the tables json file with db schema
         """
+		
+        directory=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        
+		
         self.exclude_keywords = exclude_keywords
         self.data = []
 
-        data = json.load(open(data_path, 'r', encoding="utf8"))
+        data = json.load(open(directory + '/' + data_path, 'r', encoding="utf8"))
 
         # Handle excluded keywords, by removing them, and logging how many of each type was found
         exclude_keywords_counts = {key: 0 for key in exclude_keywords}
@@ -47,7 +53,7 @@ class SpiderDataset(Dataset):
                 print(f"Found {exclude_keywords_counts[keyword]} queries with excluded keyword {keyword}")
             print(f"Total number of removed queries = {len(data) - len(self.data)} / {len(data)}")
 
-        tables = json.load(open(tables_path, 'r'))
+        tables = json.load(open(directory + '/' + tables_path, 'r'))
         # change the key of the dictionary to the db_id
         self.tables = {}
         for table in tables:

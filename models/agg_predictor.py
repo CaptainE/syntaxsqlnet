@@ -1,6 +1,9 @@
 import torch
 import numpy as np
 import torch.nn as nn
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))    
 from utils.lstm import PackedLSTM
 from utils.attention import ConditionalAttention
 

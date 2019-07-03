@@ -1,6 +1,9 @@
 import torch
 import numpy as np
 import torch.nn as nn
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))    
 from utils.lstm import PackedLSTM
 from utils.attention import ConditionalAttention
 from utils.utils import length_to_mask
@@ -8,6 +11,7 @@ from utils.utils import length_to_mask
 class ColPredictor(nn.Module):
     def __init__(self, N_word, hidden_dim, num_layers, gpu=True, use_hs=True, max_num_cols=6):
         super(ColPredictor, self).__init__()
+
         self.hidden_dim = hidden_dim
         self.gpu = gpu
         self.use_hs = use_hs

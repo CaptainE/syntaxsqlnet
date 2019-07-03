@@ -1,8 +1,12 @@
 from torch.utils.tensorboard import SummaryWriter
 import torch
 from torch.optim import Adam
-from embeddings import GloveEmbedding
 import numpy as np
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.dataloader import SpiderDataset, try_tensor_collate_fn
+from embedding.embeddings import GloveEmbedding
 
 
 def train(model, train_dataloader, validation_dataloader, embedding, name="", num_epochs=100, lr=0.001):
@@ -96,14 +100,14 @@ if __name__ == '__main__':
     from op_predictor import OpPredictor
     from having_predictor import HavingPredictor
     from desasc_limit_predictor import DesAscLimitPredictor
-    from utils.dataloader import SpiderDataset, try_tensor_collate_fn
-    from embeddings import GloveEmbedding
+    from embedding.embeddings import GloveEmbedding        
+    from utils.dataloader import  SpiderDataset, try_tensor_collate_fn
     from torch.utils.data import DataLoader
     import argparse
-
-    emb = GloveEmbedding(path='glove/glove.6B.50d.txt')
-    spider_train = SpiderDataset(data_path='train.json', tables_path='tables.json', exclude_keywords=["between", "distinct", '-', ' / ', ' + '])
-    spider_dev = SpiderDataset(data_path='dev.json', tables_path='tables.json', exclude_keywords=["between", "distinct", '-', ' / ', ' + '])
+   
+    emb = GloveEmbedding(path='\\embedding\\'+'glove.6B.50d.txt')
+    spider_train = SpiderDataset(data_path='\\tables\\'+'train.json', tables_path='\\tables\\'+'tables.json', exclude_keywords=["between", "distinct", '-', ' / ', ' + '])
+    spider_dev = SpiderDataset(data_path='\\tables\\'+'dev.json', tables_path='\\tables\\'+'tables.json', exclude_keywords=["between", "distinct", '-', ' / ', ' + '])
     
     choices=['column','keyword','andor','agg','op','having','desasc']
     models= [ColPredictor,KeyWordPredictor,AndOrPredictor,OpPredictor,HavingPredictor,DesAscLimitPredictor]
@@ -112,7 +116,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--num_layers', default=2, type=int)
     parser.add_argument('--lr', default=0.001, type=float)
-    parser.add_argument('--num_epochs',  default=100, type=int)
+    parser.add_argument('--num_epochs',  default=1, type=int)
     parser.add_argument('--batch_size', default=248, type=int)
     parser.add_argument('--name_postfix',default='', type=str)
     parser.add_argument('--use_gpu', default=False, type=bool)

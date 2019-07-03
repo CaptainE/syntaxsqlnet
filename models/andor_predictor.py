@@ -1,8 +1,11 @@
 import torch
 import numpy as np
 import torch.nn as nn
-from utils.attention import BagOfWord
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))    
 from utils.lstm import PackedLSTM
+from utils.attention import BagOfWord
 
 class AndOrPredictor(nn.Module):
     def __init__(self, N_word, hidden_dim, num_layers, gpu=True, use_hs=True):

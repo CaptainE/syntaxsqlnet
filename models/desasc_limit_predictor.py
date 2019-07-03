@@ -1,8 +1,8 @@
 import torch
 import numpy as np
 import torch.nn as nn
-from utils.attention import ConditionalAttention
-from utils.lstm import PackedLSTM
+#from utils.attention import ConditionalAttention
+#from utils.lstm import PackedLSTM
 
 class DesAscLimitPredictor(nn.Module):
     def __init__(self, N_word, hidden_dim, num_layers, gpu=True, use_hs=True):
