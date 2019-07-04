@@ -45,7 +45,7 @@ class KeyWordPredictor(nn.Module):
         self.cross_entropy = nn.CrossEntropyLoss()
         #TODO: Where does this 3 number come from? number of classes? 
         #Answer: pos_weight is a number that indicates how to balance positive to negative examples of a class
-        #eg. for 1 class with 1 postive and 3 negative, set pos_weight to 3 such that the loss acts as if there where 3 positive examples
+        #eg. for 1 class with 100 postive and 300 negative, we set pos_weight to 3 such that the loss acts as if there where 100*3 = 300 positive examples
         self.bce_logit = nn.BCEWithLogitsLoss(pos_weight=3*torch.tensor(3).cuda().double())
         if gpu:
             self.cuda()
