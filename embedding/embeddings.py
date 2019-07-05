@@ -32,7 +32,7 @@ class PretrainedEmbedding(Module):
         if not trainable:
             self.embedding.weight.requires_grad = False
 
-    def forward(self, sentences, mean_sequence=False):
+    def forward(self, sentences, mean_sequence=True):
         """
         Args:
             sentences list[str] or str: list of sentences, or one sentence
@@ -138,9 +138,9 @@ class PretrainedEmbedding(Module):
         return embeddings, np.asarray(lengths),col_name_lengths
 
 class GloveEmbedding(PretrainedEmbedding):
-    def __init__(self, path='glove.6B.300d.txt'):
+    def __init__(self, path='glove.6B.50d.txt'):
 	
-        directory=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        directory=os.path.dirname(os.path.abspath(__file__))
         
         
         word2idx = {}
@@ -163,6 +163,77 @@ class GloveEmbedding(PretrainedEmbedding):
         vectors = np.asarray(vectors, dtype=np.float)
         super(GloveEmbedding, self).__init__(num_embeddings = len(word2idx), embedding_dim=len(vectors[0]), word2idx=word2idx, vectors=vectors)
 
+
+class LaserEmbedding(PretrainedEmbedding):
+    """
+    Wrapper for pretrained Laser embeddings provided by raffle-ai . 
+    """
+    def __init__(self):
+        super(LaserEmbedding, self).__init__(num_embeddings = 1, embedding_dim = 1024, word2idx = {}, vectors = np.ones((1,1024),dtype=float))
+        #self.embedding_dim = 1024
+        #self.column_cache={}
+
+
+    def forward(self, sentences, mean_sequence=True):
+        """
+        Args:
+            sentences list[str] or str: list of sentences, or one sentence
+            mean_sequence bool: Flag if we should mean over the sequence dimension
+        Returns:
+            embedding [batch_size, seq_len, embedding_dim] or [batch_size, 1, embedding_dim]
+            lenghts [batch_size]
+        """
+        if not isinstance(sentences, list):
+            sentences = [sentences]
+
+        if isinstance(sentences, list):
+            
+        
+            #convert to lowercase words
+            sentences = [str.lower(sentence) for sentence in sentences]
+
+            batch_size = len(sentences)
+            #Convert list of sentences to list of list of tokens
+            #TODO: should we use shlex to split, to have words in quotes stay as one word? 
+            #      maybe these would just be unkown words though
+            sentences_words = [word_tokenize(sentence) for sentence in sentences]
+
+        
+            lengths = [len(sentence) for sentence in sentences_words]
+            max_len = max(lengths)
+            
+            #import laser embeddings
+            from something.datascience.transforms.embeddings.sentence_embeddings.laser.laser import LaserSentenceEmbeddings
+            embedder = LaserSentenceEmbeddings()
+           
+            word_embeddings=[]
+            
+            if not mean_sequence:
+                for sentence, length in zip(sentences_words,lengths):
+                    sentences_to_matrix=[]
+                    for word in sentence:
+                        sentences_to_matrix.append(embedder(word, method="sentence", language='en'))
+                    while length<max_len:
+                        sentences_to_matrix.append(np.zeros((1,self.embedding_dim), dtype=float))
+                        length= length+1
+                    word_embeddings.append(sentences_to_matrix)
+
+            if mean_sequence:
+                for sentence in sentences:
+                    word_embeddings.append(embedder(sentence, method="sentence", language='en'))
+            
+            
+            word_embeddings = torch.tensor(word_embeddings).squeeze().unsqueeze(0)
+                    
+            return word_embeddings, np.asarray(lengths)
+        
+
 if __name__ == "__main__":
     emb = GloveEmbedding()
-    emb(['asda ddd dw','test is a good thing','yes very much'])
+    glove_embedding=emb(['test is a good thing'])
+    print(glove_embedding[0].shape)
+    emb2 = LaserEmbedding()
+    laser_embedding=emb2(['test is a good thing'])
+    print(laser_embedding[0].shape)
+    print(emb.get_history_emb([['select', 'col1 text db', 'min'],['select', 'col2 text db max']])[0].shape)
+    print(emb2.get_history_emb([['select','col1 text db','min' ],['select', 'col2 text db', 'max']])[0].shape)
