@@ -57,7 +57,16 @@ def length_to_mask(lengths, lengths2=None, max_len=None, max_len2=None, device=t
 
 	
 def pad(sentences, pad_token=0):
+    """
+    Converts list of sentences into padded sentences in a numpy array
 
+    Args:
+        sentences [List] : list of lengths
+        pad_token int : padding token
+    Returns:
+        padded [Numpy Array of size List]: padded sentences of equal length
+        lengths: the original length of each sentence
+    """
     #Calculat the sequence length of the batch
     lengths = [len(sentence) for sentence in sentences]
     max_len = max(lengths)
@@ -75,60 +84,74 @@ def pad(sentences, pad_token=0):
 	
     return padded, lengths
 
-def make_dirs(directory,name):
-    try:
-        os.mkdir(directory+f'/{name}_train')
-        os.mkdir(directory+f'/{name}_val')
-    except FileExistsError:
-        shutil.rmtree(directory+f'/{name}_train')
-        shutil.rmtree(directory+f'/{name}_val')
-        os.mkdir(directory+f'/{name}_train')
-        os.mkdir(directory+f'/{name}_val')
+def text2int(textnum, numwords={}):
+    """
+    Converts string of length n with numbers written in letters into actual numbers of same length
 
-def save_to_dirs(directory,name,info):
-    [iter_epoch, train_loss_pickle, train_acc_pickle, train_num_train_pickle, val_loss_pickle, val_acc_pickle, val_num_val_pickle] = info
-    with open(directory+f'{name}_train/'+'epoch_iter.pkl','wb') as f:
-        pickle.dump(iter_epoch,f)
-    with open(directory+f'{name}_val/'+'epoch_iter.pkl','wb') as f:
-        pickle.dump(iter_epoch,f)
-    with open(directory+f'{name}_train/'+'train_loss.pkl','wb') as f:
-        pickle.dump(train_loss_pickle,f)
-    with open(directory+f'{name}_train/'+'train_acc.pkl','wb') as f:
-        pickle.dump(train_acc_pickle,f)
-    with open(directory+f'{name}_train/'+'train_num_train.pkl','wb') as f:
-        pickle.dump(train_num_train_pickle,f)
-    with open(directory+f'{name}_val/'+'val_loss.pkl','wb') as f:
-        pickle.dump(val_loss_pickle,f)
-    with open(directory+f'{name}_val/'+'val_acc.pkl','wb') as f:
-        pickle.dump(val_acc_pickle,f)
-    with open(directory+f'{name}_val/'+'val_num_val.pkl','wb') as f:
-        pickle.dump(val_num_val_pickle,f)
+    Args:
+        textnum [Str] : string
+        numwords [Dictionry]: dictonary of keywords that replaces text with numbers
+    Returns:
+        curstring [Str]: corrected string
+    """
+    if not numwords:
+        units = [
+        "zero", "one", "two", "three", "four", "five", "six", "seven", "eight",
+        "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
+        "sixteen", "seventeen", "eighteen", "nineteen",
+        ]
 
-def plot_from_dirs(directory,name,info):
-    with open(directory+f'{name}_train/'+'epoch_iter.pkl','rb') as f:
-        iter_epoch = pickle.load(f)
-    with open(directory+f'{name}_train/'+'train_loss.pkl','rb') as f:
-        train_loss_pickle = pickle.load(f)
-    with open(directory+f'{name}_train/'+'train_acc.pkl','rb') as f:
-        train_acc_pickle = pickle.load(f)
-    with open(directory+f'{name}_train/'+'train_num_train.pkl','rb') as f:
-        train_num_train_pickle = pickle.load(f)
-    with open(directory+f'{name}_val/'+'val_loss.pkl','rb') as f:
-        val_loss_pickle = pickle.load(f)
-    with open(directory+f'{name}_val/'+'val_acc.pkl','rb') as f:
-        val_acc_pickle = pickle.load(f)
-    with open(directory+f'{name}_val/'+'val_num_val.pkl','rb') as f:
-        val_num_val_pickle = pickle.load(f)
-    plt.subplot(2,1,1)
-    plt.plot( iter_epoch, train_loss_pickle , color='blue', label='train', linewidth=2)
-    plt.plot( iter_epoch, val_loss_pickle, color='olive', label='val', linewidth=2)
-    plt.ylabel('loss')
-    plt.subplot(2,1,2)
-    plt.plot( iter_epoch, train_acc_pickle , color='blue', label='train', linewidth=2)
-    plt.plot( iter_epoch, val_acc_pickle, color='olive', label='val', linewidth=2)
-    plt.xlabel('epochs')
-    plt.ylabel('acc')
-    plt.show()
+        tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
+
+        for idx, word in enumerate(units):  numwords[word] = (1, idx)
+        for idx, word in enumerate(tens):       numwords[word] = (1, idx * 10)
+
+    ordinal_words = {'first':1, 'second':2, 'third':3, 'fourth':4, 'fifth':5, 'sixth':6, 'seventh':7, 'eighth':8, 'ninth':9, 'tenth':10, 'twelfth':12}
+    ordinal_endings = [('ieth', 'y')]
+
+    # TODO: this breaks joined words like right-handed. What was the purpose?
+    #textnum = textnum.replace('-', ' ')
+
+    current = result = 0
+    curstring = ""
+    onnumber = False
+    num_tokens=len(textnum.split())
+    tokens=textnum.split()
+    for word in tokens:
+        if word in ordinal_words:
+            scale, increment = (1, ordinal_words[word])
+            current = current * scale + increment
+            if scale > 100:
+                result += current
+                current = 0
+            onnumber = True
+        else:
+            for ending, replacement in ordinal_endings:
+                if word.endswith(ending):
+                    word = "%s%s" % (word[:-len(ending)], replacement)
+
+            if word not in numwords:
+                if onnumber:
+                    curstring += repr(result + current) + " "
+                if num_tokens-1 == tokens.index(word):
+                    curstring += word + ""  
+                else:  
+                    curstring += word + " "
+                result = current = 0
+                onnumber = False
+            else:
+                scale, increment = numwords[word]
+
+                current = current * scale + increment
+                if scale > 100:
+                    result += current
+                    current = 0
+                onnumber = True
+
+    if onnumber:
+        curstring += repr(result + current)
+
+    return curstring
 
 if __name__ == '__main__':
 

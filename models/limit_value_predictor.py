@@ -8,9 +8,12 @@ from utils.lstm import PackedLSTM
 from utils.attention import ConditionalAttention
 from models.agg_predictor import AggPredictor
 
-class OpPredictor(AggPredictor):
+class LimitValuePredictor(AggPredictor):
     """
     This module is identical to AggPredictor, so we inherit.
     """
-    def __init__(self, num=9, *args, **kwargs):
-        super(OpPredictor, self).__init__(*args, **kwargs, num=num)
+    def __init__(self, num=10, *args, **kwargs):
+        super(LimitValuePredictor, self).__init__(*args, **kwargs, num=num)
+
+    def predict(self, *args):
+        return AggPredictor.predict(self, *args)
